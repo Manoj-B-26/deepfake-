@@ -84,6 +84,9 @@ async def analyze_audio(file: UploadFile = File(...)):
         os.remove(temp_file)
         return result
     except Exception as e:
+        print(f"ERROR in audio detection: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/detect/video")

@@ -19,23 +19,6 @@ def init_db():
     # Feedback table
     c.execute('''CREATE TABLE IF NOT EXISTS feedback
                  (scan_id TEXT, 
-                  rating INTEGER, 
-                  comments TEXT,
-                  FOREIGN KEY(scan_id) REFERENCES history(id))''')
-    conn.commit()
-    conn.close()
-
-def save_scan_result(type, filename, result_dict):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    scan_id = str(uuid.uuid4())
-    timestamp = datetime.datetime.now().isoformat()
-    result_json = json.dumps(result_dict)
-    
-    c.execute("INSERT INTO history (id, timestamp, type, filename, result) VALUES (?, ?, ?, ?, ?)",
-              (scan_id, timestamp, type, filename, result_json))
-    conn.commit()
-    conn.close()
     return scan_id
 
 def get_history():
