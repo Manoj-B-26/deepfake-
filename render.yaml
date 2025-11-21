@@ -23,6 +23,6 @@ services:
         fromService:
           type: web
           name: deepfake-detection-backend
-    plan: free
+
           property: host
     autoDeploy: false
