@@ -19,6 +19,44 @@ def init_db():
     # Feedback table
     c.execute('''CREATE TABLE IF NOT EXISTS feedback
                  (scan_id TEXT, 
+                  rating INTEGER, 
+                  comments TEXT,
+                  FOREIGN KEY(scan_id) REFERENCES history(id))''')
+    conn.commit()
+    conn.close()
+
+def save_scan_result(media_type, filename, result_dict):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    # Convert numpy types to Python types for JSON serialization
+    def convert_to_python_types(obj):
+        import numpy as np
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: convert_to_python_types(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_to_python_types(item) for item in obj]
+        return obj
+    
+    # Convert all numpy types in result_dict
+    result_dict = convert_to_python_types(result_dict)
+    
+    scan_id = str(uuid.uuid4())
+    timestamp = datetime.datetime.now().isoformat()
+    result_json = json.dumps(result_dict)
+    
+    c.execute("INSERT INTO history (id, timestamp, type, filename, result) VALUES (?, ?, ?, ?, ?)",
+              (scan_id, timestamp, media_type, filename, result_json))
+    conn.commit()
+    conn.close()
     return scan_id
 
 def get_history():
