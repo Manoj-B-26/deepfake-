@@ -11,18 +11,15 @@ services:
         value: 3.10.0
     autoDeploy: false
 
+staticSites:
   # Frontend Service
-  - type: web
-    name: deepfake-detection-frontend
-    plan: free
-    env: static
+  - name: deepfake-detection-frontend
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
+    publishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
         fromService:
           type: web
           name: deepfake-detection-backend
-
           property: host
     autoDeploy: false
