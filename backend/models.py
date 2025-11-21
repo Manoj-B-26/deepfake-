@@ -3,11 +3,25 @@ import time
 import os
 from PIL import Image
 from cnn_model_pytorch import CNNModel
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+import torch.nn.functional as F
+import torch
 
-# Initialize the model
-# Using absolute path to ensure it's found
+# Initialize the CNN model for images
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "cnn_trained.pth")
 cnn_model = CNNModel(model_path=MODEL_PATH)
+
+# Initialize GPT-2 for text detection
+print("Loading GPT-2 model for text detection...")
+try:
+    gpt2_tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+    gpt2_model = GPT2LMHeadModel.from_pretrained('gpt2')
+    gpt2_model.eval()
+    print("GPT-2 model loaded successfully!")
+except Exception as e:
+    print(f"Warning: Could not load GPT-2 model: {e}")
+    gpt2_tokenizer = None
+    gpt2_model = None
 
 def get_threat_level(score):
     if score > 80:
@@ -73,19 +87,98 @@ def detect_image(file_path):
         }
 
 def detect_text(text):
-    time.sleep(0.5)
-    # Simple heuristic: check for repetition or common AI patterns (mock)
-    confidence = random.uniform(0, 100)
-    return {
-        "type": "text",
-        "is_fake": confidence > 50,
-        "confidence_score": round(confidence, 2),
-        "threat_level": get_threat_level(confidence),
-        "breakdown": {
-            "perplexity": round(random.uniform(10, 100), 2),
-            "burstiness": round(random.uniform(10, 100), 2)
+    """
+    Detect if text is AI-generated using GPT-2 perplexity analysis.
+    Lower perplexity = more likely AI-generated (AI text is more predictable)
+    Higher perplexity = more likely human-written (humans are less predictable)
+    """
+    if not gpt2_model or not gpt2_tokenizer:
+        # Fallback to mock if model not loaded
+        time.sleep(0.5)
+        confidence = random.uniform(0, 100)
+        return {
+            "type": "text",
+            "is_fake": confidence > 50,
+            "confidence_score": round(confidence, 2),
+            "threat_level": get_threat_level(confidence),
+            "breakdown": {
+                "perplexity": round(random.uniform(10, 100), 2),
+                "burstiness": round(random.uniform(10, 100), 2)
+            },
+            "message": "GPT-2 model not loaded, using fallback detection"
         }
-    }
+    
+    try:
+        # Tokenize the input text
+        encodings = gpt2_tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+        
+        # Calculate perplexity
+        with torch.no_grad():
+            outputs = gpt2_model(**encodings, labels=encodings['input_ids'])
+            loss = outputs.loss
+            perplexity = torch.exp(loss).item()
+        
+        # Calculate burstiness (variance in token probabilities)
+        with torch.no_grad():
+            logits = gpt2_model(**encodings).logits
+            probs = F.softmax(logits, dim=-1)
+            # Get probability of actual tokens
+            token_probs = []
+            for i in range(len(encodings['input_ids'][0]) - 1):
+                token_id = encodings['input_ids'][0][i + 1].item()
+                prob = probs[0, i, token_id].item()
+                token_probs.append(prob)
+            
+            # Burstiness: standard deviation of probabilities
+            if len(token_probs) > 1:
+                mean_prob = sum(token_probs) / len(token_probs)
+                variance = sum((p - mean_prob) ** 2 for p in token_probs) / len(token_probs)
+                burstiness = variance ** 0.5
+            else:
+                burstiness = 0
+        
+        # Scoring logic:
+        # Low perplexity (< 30) = likely AI-generated
+        # High perplexity (> 100) = likely human-written
+        # Normalize perplexity to 0-100 scale (inverted)
+        perplexity_score = min(100, max(0, (150 - perplexity) / 1.5))
+        
+        # Burstiness score (low burstiness = AI, high = human)
+        burstiness_score = min(100, burstiness * 1000)
+        
+        # Combined confidence (weighted average)
+        confidence = (perplexity_score * 0.7 + burstiness_score * 0.3)
+        
+        # Determine if fake (AI-generated)
+        is_fake = confidence > 55  # Threshold for AI detection
+        
+        return {
+            "type": "text",
+            "is_fake": is_fake,
+            "confidence_score": round(confidence, 2),
+            "threat_level": get_threat_level(confidence) if is_fake else "Low Threat",
+            "breakdown": {
+                "perplexity": round(perplexity, 2),
+                "burstiness": round(burstiness_score, 2)
+            },
+            "message": f"Text analyzed using GPT-2. Perplexity: {perplexity:.2f}"
+        }
+        
+    except Exception as e:
+        # Fallback on error
+        print(f"Error in text detection: {e}")
+        confidence = random.uniform(0, 100)
+        return {
+            "type": "text",
+            "is_fake": confidence > 50,
+            "confidence_score": round(confidence, 2),
+            "threat_level": get_threat_level(confidence),
+            "breakdown": {
+                "perplexity": round(random.uniform(10, 100), 2),
+                "burstiness": round(random.uniform(10, 100), 2)
+            },
+            "message": f"Error in analysis: {str(e)}"
+        }
 
 def detect_audio(file_path):
     time.sleep(1.5)
