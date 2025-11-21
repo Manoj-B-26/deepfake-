@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Build output
+dist/
+build/
+
+# IDE settings
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temp_*
+*.log
+dds_history.db
