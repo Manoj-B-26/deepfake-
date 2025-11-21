@@ -1,11 +1,11 @@
 [phases.setup]
-nixPkgs = ['python310', 'gcc']
+nixPkgs = ['python310']
 
 [phases.install]
-cmds = ['pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu']
+cmds = ['python -m pip install --upgrade pip', 'python -m pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu']
 
 [phases.build]
 cmds = []
 
 [start]
-cmd = 'uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}'
+cmd = 'python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}'
