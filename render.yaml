@@ -2,6 +2,7 @@ services:
   # Backend Service
   - type: web
     name: deepfake-detection-backend
+    plan: free
     env: python
     buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -13,6 +14,7 @@ services:
   # Frontend Service
   - type: web
     name: deepfake-detection-frontend
+    plan: free
     env: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
@@ -21,5 +23,6 @@ services:
         fromService:
           type: web
           name: deepfake-detection-backend
+    plan: free
           property: host
     autoDeploy: false
