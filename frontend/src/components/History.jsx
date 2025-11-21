@@ -6,10 +6,16 @@ const History = () => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const getApiUrl = () => {
+        const url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        return url.startsWith('http') ? url : `https://${url}`;
+    };
+    const API_URL = getApiUrl();
+
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/history`);
+                const res = await axios.get(`${API_URL}/history`);
                 setHistory(res.data);
             } catch (err) {
                 console.error(err);

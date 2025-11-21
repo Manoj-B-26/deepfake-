@@ -21,5 +21,5 @@ services:
         fromService:
           type: web
           name: deepfake-detection-backend
-          property: url
+          property: host
     autoDeploy: false

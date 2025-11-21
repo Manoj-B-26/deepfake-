@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { ShieldCheck, AlertTriangle, FileText, Video, Mic, Image as ImageIcon, ArrowRight, Activity } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const getApiUrl = () => {
+    const url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    return url.startsWith('http') ? url : `https://${url}`;
+};
+const API_URL = getApiUrl();
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
     <div className="bg-cyber-gray border border-gray-800 p-6 rounded-xl hover:border-gray-600 transition-all duration-300 group">

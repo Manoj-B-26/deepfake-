@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Upload, FileText, Image as ImageIcon, Mic, Video, X, CheckCircle, AlertTriangle, Loader2, Activity, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const getApiUrl = () => {
+    const url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    return url.startsWith('http') ? url : `https://${url}`;
+};
+const API_URL = getApiUrl();
 
 const Detector = () => {
     const [mode, setMode] = useState('image');
