@@ -10,3 +10,4 @@ opencv-python-headless
 transformers
 librosa
 soundfile
+tqdm
