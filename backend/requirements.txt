@@ -8,3 +8,5 @@ numpy
 Pillow
 opencv-python-headless
 transformers
+librosa
+soundfile

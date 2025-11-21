@@ -3,9 +3,11 @@ import time
 import os
 from PIL import Image
 from cnn_model_pytorch import CNNModel
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from transformers import GPT2LMHeadModel, GPT2Tokenizer, Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor
 import torch.nn.functional as F
 import torch
+import librosa
+import numpy as np
 
 # Initialize the CNN model for images
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "cnn_trained.pth")
@@ -22,6 +24,18 @@ except Exception as e:
     print(f"Warning: Could not load GPT-2 model: {e}")
     gpt2_tokenizer = None
     gpt2_model = None
+
+# Initialize Wav2Vec 2.0 for audio detection
+print("Loading Wav2Vec 2.0 model for audio detection...")
+try:
+    wav2vec_model = Wav2Vec2ForSequenceClassification.from_pretrained("facebook/wav2vec2-base")
+    wav2vec_feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("facebook/wav2vec2-base")
+    wav2vec_model.eval()
+    print("Wav2Vec 2.0 model loaded successfully!")
+except Exception as e:
+    print(f"Warning: Could not load Wav2Vec 2.0 model: {e}")
+    wav2vec_model = None
+    wav2vec_feature_extractor = None
 
 def get_threat_level(score):
     if score > 80:
@@ -181,18 +195,128 @@ def detect_text(text):
         }
 
 def detect_audio(file_path):
-    time.sleep(1.5)
-    confidence = random.uniform(0, 100)
-    return {
-        "type": "audio",
-        "is_fake": confidence > 50,
-        "confidence_score": round(confidence, 2),
-        "threat_level": get_threat_level(confidence),
-        "breakdown": {
-            "spectral_consistency": round(random.uniform(0, 100), 2),
-            "background_noise": round(random.uniform(0, 100), 2)
+    """
+    Detect if audio is AI-generated or contains deepfake voice using Wav2Vec 2.0 and spectral analysis.
+    Analyzes voice patterns, spectral consistency, and background noise characteristics.
+    """
+    if not wav2vec_model or not wav2vec_feature_extractor:
+        # Fallback to mock if model not loaded
+        time.sleep(1.5)
+        confidence = random.uniform(0, 100)
+        return {
+            "type": "audio",
+            "is_fake": confidence > 50,
+            "confidence_score": round(confidence, 2),
+            "threat_level": get_threat_level(confidence),
+            "breakdown": {
+                "spectral_consistency": round(random.uniform(0, 100), 2),
+                "background_noise": round(random.uniform(0, 100), 2)
+            },
+            "message": "Wav2Vec 2.0 model not loaded, using fallback detection"
         }
-    }
+    
+    try:
+        # Load audio file
+        audio, sample_rate = librosa.load(file_path, sr=16000)  # Wav2Vec expects 16kHz
+        
+        # Ensure audio is not too short
+        if len(audio) < 1600:  # Less than 0.1 seconds
+            return {
+                "type": "audio",
+                "is_fake": False,
+                "confidence_score": 0,
+                "threat_level": "Low Threat",
+                "breakdown": {
+                    "spectral_consistency": 0,
+                    "background_noise": 0
+                },
+                "message": "Audio too short for analysis"
+            }
+        
+        # Extract features using Wav2Vec 2.0
+        inputs = wav2vec_feature_extractor(audio, sampling_rate=16000, return_tensors="pt", padding=True)
+        
+        with torch.no_grad():
+            # Get model embeddings
+            outputs = wav2vec_model(**inputs, output_hidden_states=True)
+            hidden_states = outputs.hidden_states[-1]  # Last layer
+            
+            # Calculate embedding statistics
+            mean_embedding = hidden_states.mean(dim=1).squeeze()
+            std_embedding = hidden_states.std(dim=1).squeeze()
+            
+            # Voice pattern consistency (low std = AI-generated, high std = human)
+            voice_consistency = std_embedding.mean().item()
+        
+        # Spectral analysis
+        # Calculate spectral centroid (frequency distribution)
+        spectral_centroids = librosa.feature.spectral_centroid(y=audio, sr=sample_rate)[0]
+        spectral_variance = np.var(spectral_centroids)
+        
+        # Calculate zero crossing rate (voice naturalness)
+        zcr = librosa.feature.zero_crossing_rate(audio)[0]
+        zcr_variance = np.var(zcr)
+        
+        # Background noise analysis
+        # Calculate spectral flatness (noise indicator)
+        spectral_flatness = librosa.feature.spectral_flatness(y=audio)[0]
+        noise_level = np.mean(spectral_flatness)
+        
+        # Scoring logic:
+        # AI-generated audio tends to have:
+        # - Low voice consistency (uniform patterns)
+        # - Low spectral variance (predictable frequencies)
+        # - Low zero-crossing variance (consistent rhythm)
+        # - Very low or very high noise levels (unnatural)
+        
+        # Normalize scores to 0-100 scale
+        voice_score = min(100, max(0, voice_consistency * 50))
+        spectral_score = min(100, max(0, spectral_variance / 1000))
+        
+        # Noise score (natural speech has moderate noise)
+        if 0.01 < noise_level < 0.1:
+            noise_score = 100 - (abs(noise_level - 0.05) * 1000)
+        else:
+            noise_score = max(0, 100 - (abs(noise_level - 0.05) * 2000))
+        
+        # Combined confidence (weighted average)
+        # Lower scores = more likely AI-generated
+        spectral_consistency_score = (spectral_score + voice_score) / 2
+        background_noise_score = noise_score
+        
+        # Overall confidence (inverted - high score = likely fake)
+        confidence = 100 - ((spectral_consistency_score * 0.6) + (background_noise_score * 0.4))
+        
+        # Determine if fake
+        is_fake = confidence > 55  # Threshold for AI detection
+        
+        return {
+            "type": "audio",
+            "is_fake": is_fake,
+            "confidence_score": round(confidence, 2),
+            "threat_level": get_threat_level(confidence) if is_fake else "Low Threat",
+            "breakdown": {
+                "spectral_consistency": round(spectral_consistency_score, 2),
+                "background_noise": round(background_noise_score, 2)
+            },
+            "message": f"Audio analyzed using Wav2Vec 2.0. Duration: {len(audio)/sample_rate:.2f}s"
+        }
+        
+    except Exception as e:
+        # Fallback on error
+        print(f"Error in audio detection: {e}")
+        confidence = random.uniform(0, 100)
+        return {
+            "type": "audio",
+            "is_fake": confidence > 50,
+            "confidence_score": round(confidence, 2),
+            "threat_level": get_threat_level(confidence),
+            "breakdown": {
+                "spectral_consistency": round(random.uniform(0, 100), 2),
+                "background_noise": round(random.uniform(0, 100), 2)
+            },
+            "message": f"Error in analysis: {str(e)}"
+        }
 
 import cv2
 import numpy as np
