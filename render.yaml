@@ -1,5 +1,4 @@
 services:
-  # Backend Service
   - type: web
     name: deepfake-detection-backend
     rootDir: backend
@@ -9,18 +8,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.10.0"
-    autoDeploy: false
 
 staticSites:
-  # Frontend Service
   - name: deepfake-detection-frontend
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: deepfake-detection-backend
-          property: host
-    autoDeploy: false
