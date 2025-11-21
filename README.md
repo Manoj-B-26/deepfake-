@@ -23,38 +23,55 @@ In an era of rapidly advancing generative AI, the proliferation of deepfakes pos
 *   **History Dashboard**: Track all past scans and view aggregate statistics.
 *   **Authenticity Certificates**: Downloadable proof for verified content.
 
-## Deployment Instructions
+## Deployment Instructions (Railway)
 
 ### Prerequisites
-*   Node.js & npm
-*   Python 3.8+
-*   pip
+*   GitHub account
+*   Railway account (sign up at [railway.app](https://railway.app))
 
-### 1. Backend Setup
-Navigate to the backend directory and install dependencies:
+### Steps
+
+1. **Push your code to GitHub** (already done!)
+
+2. **Create a new project on Railway**:
+   - Go to [railway.app](https://railway.app)
+   - Click "New Project"
+   - Select "Deploy from GitHub repo"
+   - Choose your `deepfake-` repository
+
+3. **Railway will auto-detect both services**:
+   - `backend` (Python/FastAPI)
+   - `frontend` (React/Vite)
+
+4. **Configure Environment Variables**:
+   - Click on the **Frontend** service
+   - Go to "Variables" tab
+   - Add: `VITE_API_URL` = `https://[your-backend-service-url]`
+   - (Railway will show you the backend URL after deployment)
+
+5. **Deploy**:
+   - Railway will automatically build and deploy both services
+   - Wait for deployment to complete (~3-5 minutes)
+
+6. **Get your URLs**:
+   - Backend: `https://deepfake-detection-backend.up.railway.app`
+   - Frontend: `https://deepfake-detection-frontend.up.railway.app`
+
+### Alternative: Local Deployment
+
+If you want to run locally instead:
+
 ```bash
+# Backend
 cd backend
 pip install -r requirements.txt
-```
-
-Start the FastAPI server:
-```bash
 python -m uvicorn main:app --reload
-```
-The backend will run on `http://localhost:8000`.
 
-### 2. Frontend Setup
-Open a new terminal, navigate to the frontend directory, and install dependencies:
-```bash
+# Frontend (new terminal)
 cd frontend
 npm install
-```
-
-Start the development server:
-```bash
 npm run dev
 ```
-The frontend will run on `http://localhost:5173`.
 
 ## Usage
 1.  Open the frontend URL in your browser.
