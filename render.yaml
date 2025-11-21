@@ -11,7 +11,7 @@ services:
     autoDeploy: false
 
   # Frontend Service
-  - type: static
+  - type: web
     name: deepfake-detection-frontend
     env: static
     buildCommand: cd frontend && npm install && npm run build
