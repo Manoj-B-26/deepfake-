@@ -13,7 +13,8 @@ In an era of rapidly advancing generative AI, the proliferation of deepfakes pos
 ## Technology Stack
 *   **Frontend**: React.js, Vite, Tailwind CSS v4 (Cyber-Forensic Theme)
 *   **Backend**: Python, FastAPI, Uvicorn
-*   **AI/ML**: PyTorch (Custom CNN), Pillow, NumPy
+*   **AI/ML**: PyTorch (Custom CNN), Librosa, Pillow, NumPy
+*   **Audio Detection**: CNN-based spectrogram analysis (based on Kaggle kernel: hakim11/deep-fake-voice-recognition-using-cnn)
 *   **Database**: SQLite (History & Feedback tracking)
 
 ## Features
@@ -56,6 +57,59 @@ In an era of rapidly advancing generative AI, the proliferation of deepfakes pos
 6. **Get your URLs**:
    - Backend: `https://deepfake-detection-backend.up.railway.app`
    - Frontend: `https://deepfake-detection-frontend.up.railway.app`
+
+### Audio Model Setup
+
+The audio deepfake detection uses a CNN-based model that analyzes mel-spectrograms. You have two options:
+
+#### Option 1: Download Pre-trained Model from Kaggle (Recommended)
+
+```bash
+cd backend
+python download_kaggle_model.py
+```
+
+Or manually using Kaggle CLI:
+```bash
+pip install kaggle
+kaggle kernels output hakim11/deep-fake-voice-recognition-using-cnn -p ./backend
+# Rename the downloaded model file to audio_cnn_trained.pth if needed
+```
+
+#### Option 2: Train Your Own Model
+
+If you have a dataset with real and fake audio samples:
+
+```bash
+cd backend
+python train_audio_model.py \
+    --train_dir /path/to/train \
+    --val_dir /path/to/val \
+    --epochs 50 \
+    --batch_size 32
+```
+
+Expected directory structure:
+```
+train/
+  real/
+    audio1.wav
+    audio2.wav
+    ...
+  fake/
+    audio1.wav
+    audio2.wav
+    ...
+val/
+  real/
+    audio1.wav
+    ...
+  fake/
+    audio1.wav
+    ...
+```
+
+**Note**: If no trained model is available, the system will use fallback spectral analysis.
 
 ### Alternative: Local Deployment
 

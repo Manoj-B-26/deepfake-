@@ -24,3 +24,9 @@ Thumbs.db
 temp_*
 *.log
 dds_history.db
+result.txt
+download_log.txt
+*.wav
+backend/dataset/
+!backend/models/*.wav
+create_logo.py

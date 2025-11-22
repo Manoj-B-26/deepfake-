@@ -11,3 +11,6 @@ transformers
 librosa
 soundfile
 tqdm
+kaggle
+python-dateutil
+torchaudio

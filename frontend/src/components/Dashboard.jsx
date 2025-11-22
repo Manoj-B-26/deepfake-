@@ -56,11 +56,11 @@ const Dashboard = ({ setActiveTab }) => {
                     <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
                         System Overview
                     </h1>
-                    <p className="text-gray-400">Real-time deepfake detection monitoring</p>
+                    <p className="text-gray-400">Deepfake Detection Monitoring</p>
                 </div>
                 <button
                     onClick={() => setActiveTab('detector')}
-                    className="bg-neon-blue text-black px-6 py-3 rounded-lg font-bold hover:bg-cyan-400 transition-colors flex items-center space-x-2 shadow-neon-blue"
+                    className="bg-cyan-400 text-black px-6 py-3 rounded-lg font-bold hover:bg-cyan-300 transition-colors flex items-center space-x-2 shadow-neon-blue opacity-100"
                 >
                     <span>START NEW SCAN</span>
                     <ArrowRight className="w-4 h-4" />
@@ -73,6 +73,8 @@ const Dashboard = ({ setActiveTab }) => {
                 <StatCard title="Authentic Media" value={stats.authentic_media} icon={ShieldCheck} color="neon-green" />
                 <StatCard title="Avg. Confidence" value={`${stats.avg_confidence}%`} icon={Activity} color="purple-500" />
             </div>
+
+
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-cyber-gray border border-gray-800 rounded-xl p-6">
@@ -107,7 +109,28 @@ const Dashboard = ({ setActiveTab }) => {
 
                 <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-neon-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    <h3 className="text-xl font-bold mb-4">Supported Modalities</h3>
+                    <h3 className="text-xl font-bold mb-4">Project Highlights</h3>
+
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                            <div className="text-2xl font-bold text-white">98%</div>
+                            <div className="text-neon-blue text-xs font-mono">ACCURACY</div>
+                        </div>
+                        <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                            <div className="text-2xl font-bold text-white">140k+</div>
+                            <div className="text-neon-green text-xs font-mono">IMAGES</div>
+                        </div>
+                        <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                            <div className="text-2xl font-bold text-white">4</div>
+                            <div className="text-purple-500 text-xs font-mono">MODALITIES</div>
+                        </div>
+                        <div className="bg-black/40 p-3 rounded-lg border border-white/5">
+                            <div className="text-xl font-bold text-white">Real-Time</div>
+                            <div className="text-neon-red text-xs font-mono">SPEED</div>
+                        </div>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Supported Modalities</h4>
                     <div className="grid grid-cols-2 gap-4">
                         {[
                             { label: 'Image', icon: ImageIcon },
@@ -117,7 +140,7 @@ const Dashboard = ({ setActiveTab }) => {
                         ].map((m) => (
                             <div key={m.label} className="bg-black/40 p-4 rounded-lg border border-white/5 hover:border-neon-blue/50 transition-colors cursor-default">
                                 <m.icon className="w-6 h-6 text-gray-400 mb-2" />
-                                <p className="font-mono text-sm">{m.label} Analysis</p>
+                                <p className="font-mono text-sm">{m.label}</p>
                             </div>
                         ))}
                     </div>

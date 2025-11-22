@@ -145,7 +145,7 @@ const Detector = () => {
                         disabled={loading || (!file && !textInput)}
                         className={`w-full mt-6 py-4 rounded-lg font-bold text-lg flex items-center justify-center space-x-2 transition-all ${loading || (!file && !textInput)
                             ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                            : 'bg-neon-blue text-black hover:bg-cyan-400 shadow-neon-blue'
+                            : 'bg-cyan-400 text-black hover:bg-cyan-300 shadow-neon-blue opacity-100'
                             }`}
                     >
                         {loading ? (
@@ -227,7 +227,7 @@ const Detector = () => {
                                         </p>
                                         <button
                                             onClick={() => window.open(`${API_URL}/certificate/${result.scan_id}`, '_blank')}
-                                            className="mt-3 text-xs bg-neon-green text-black px-3 py-1 rounded font-bold hover:bg-green-400 transition-colors"
+                                            className="mt-3 text-xs bg-green-400 text-black px-3 py-1 rounded font-bold hover:bg-green-300 transition-colors opacity-100"
                                         >
                                             DOWNLOAD CERTIFICATE
                                         </button>
